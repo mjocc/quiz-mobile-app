@@ -12,7 +12,7 @@ import { IonReactRouter } from '@ionic/react-router';
 import { create, play } from 'ionicons/icons';
 import Play from './pages/Play';
 import ManageQuizzes from './pages/ManageQuizzes';
-// import ManageQuiz from './pages/ManageQuiz';
+import ManageQuiz from './pages/ManageQuiz';
 // import ManageQuestion from './pages/ManageQuestion';
 
 /* Core CSS required for Ionic components to work properly */
@@ -41,7 +41,7 @@ const App: React.FC = () => (
         <IonRouterOutlet>
           <Route exact path="/play" component={Play} />
           <Route exact path="/manage" component={ManageQuizzes} />
-          {/* <Route exact path="/manage/:id" component={ManageQuiz} /> */}
+          <Route exact path="/manage/:quizId" component={ManageQuiz} />
           {/* <Route
             exact
             path="/manage/:quizId/:questionId"

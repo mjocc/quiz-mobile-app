@@ -17,13 +17,13 @@ interface Question {
   id: string;
   order: number;
   text: string;
-  options: Option[];
+  options: string[]; // array of 'foreign keys'
 };
 
 interface Quiz {
   id: string;
   order: number;
   text: string;
-  modified: Date;
-  questions: Question[];
+  modified: number; // unix time
+  questions: string[]; // array of 'foreign keys'
 };

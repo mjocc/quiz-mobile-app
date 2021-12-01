@@ -6,7 +6,7 @@ interface ManageActionSheetProps {
   itemType: string; // e.g. 'quiz' or 'question' etc.
   itemToEdit: Item | undefined;
   setItemToEdit: (value: any) => void;
-  renameItem: (params: { itemToEdit: Item, newItemName: string }) => void;
+  renameItem: (params: { itemToEdit: Item, newItemText: string }) => void;
   deleteItem: (params: { itemToEdit: Item }) => void;
   getPath: (params: { itemToEdit: Item }) => string; // should return the path to manage 'itemToEdit'
 }
@@ -35,9 +35,9 @@ const ManageActionSheet: React.FC<ManageActionSheetProps> = ({
                 header: `Rename '${itemToEdit.text}'`,
                 inputs: [
                   {
-                    name: 'newItemName',
+                    name: 'newItemText',
                     type: 'text',
-                    placeholder: `New ${itemType} name`,
+                    placeholder: `New ${itemType} text`,
                     value: itemToEdit.text,
                   },
                 ],
@@ -51,8 +51,8 @@ const ManageActionSheet: React.FC<ManageActionSheetProps> = ({
                   },
                   {
                     text: 'Rename',
-                    handler: ({ newItemName }) => {
-                      renameItem({ itemToEdit, newItemName });
+                    handler: ({ newItemText }) => {
+                      renameItem({ itemToEdit, newItemText });
                     },
                   },
                 ],
@@ -76,8 +76,26 @@ const ManageActionSheet: React.FC<ManageActionSheetProps> = ({
           icon: trash,
           handler: () => {
             if (itemToEdit) {
-              deleteItem({ itemToEdit });
-              setItemToEdit(undefined);
+              present({
+                header: `Are you sure you want to delete '${itemToEdit.text}'?`,
+                buttons: [
+                  {
+                    text: 'Cancel',
+                    role: 'cancel',
+                    handler: () => {
+                      setItemToEdit(undefined);
+                    },
+                  },
+                  {
+                    text: 'Delete',
+                    role: 'destructive',
+                    handler: () => {
+                      deleteItem({ itemToEdit });
+                      setItemToEdit(undefined);
+                    },
+                  },
+                ],
+              });
             }
           },
         },

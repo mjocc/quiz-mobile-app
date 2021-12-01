@@ -9,7 +9,7 @@ import { add, close, create, reorderFour } from 'ionicons/icons';
 
 interface ManageFabProps {
   itemType: string; // e.g. 'quiz' or 'question' etc.
-  createItem: (params: { newItemName: string }) => void;
+  createItem: (params: { newItemText: string }) => void;
   reorderMode: boolean;
   setReorderMode: (value: boolean) => void;
 }
@@ -44,9 +44,9 @@ const ManageFab: React.FC<ManageFabProps> = ({
                   header: `Create ${itemType}`,
                   inputs: [
                     {
-                      name: 'newItemName',
+                      name: 'newItemText',
                       type: 'text',
-                      placeholder: `New ${itemType} name`,
+                      placeholder: `New ${itemType} text`,
                     },
                   ],
                   buttons: [
@@ -56,8 +56,8 @@ const ManageFab: React.FC<ManageFabProps> = ({
                     },
                     {
                       text: 'Create',
-                      handler: ({ newItemName }) => {
-                        createItem({ newItemName });
+                      handler: ({ newItemText }) => {
+                        createItem({ newItemText });
                       },
                     },
                   ],

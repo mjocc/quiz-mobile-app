@@ -13,6 +13,7 @@
     "@capacitor/storage": "^1.2.3",
     "@ionic/react": "^5.5.0",
     "@ionic/react-router": "^5.5.0",
+    "@reduxjs/toolkit": "^1.6.2",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",
     "@testing-library/user-event": "^12.6.3",
@@ -23,8 +24,10 @@
     "@types/react-router": "^5.1.11",
     "@types/react-router-dom": "^5.1.7",
     "ionicons": "^5.4.0",
+    "lodash-es": "^4.17.21",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "react-redux": "^7.2.6",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.2",
@@ -69,7 +72,9 @@
     ]
   },
   "devDependencies": {
-    "@capacitor/cli": "3.3.2"
+    "@capacitor/cli": "3.3.2",
+    "@redux-devtools/core": "^3.9.1",
+    "@types/lodash-es": "^4.17.5"
   },
   "description": "An Ionic project"
 }
