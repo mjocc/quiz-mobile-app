@@ -1,31 +1,31 @@
 import { ItemReorderEventDetail } from '@ionic/core';
 import { IonList, IonReorderGroup } from '@ionic/react';
 import { createContext, useState } from 'react';
-import ManageActionSheet from './ManageActionSheet';
 import ManageFab from './ManageFab';
 
+export type CreateItem = (params: { newItemText: string }) => void;
+export type RenameItem = (params: {
+  itemToEdit: Item;
+  newItemText: string;
+}) => void;
+export type DeleteItem = (params: { itemToEdit: Item }) => void;
 interface ManageListProps {
   itemType: string; // e.g. 'quiz' or 'question' etc.
-  itemToEdit: Item | undefined;
-  setItemToEdit: (value: any) => void;
-  createItem: (params: { newItemText: string }) => void;
-  renameItem: (params: { itemToEdit: Item; newItemText: string }) => void;
-  deleteItem: (params: { itemToEdit: Item }) => void;
-  getPath: (params: { itemToEdit: Item }) => string; // should return the path to manage 'itemToEdit'
-  onReorder: (event: CustomEvent<ItemReorderEventDetail>) => void;
+  useReorder?: boolean;
+  onReorder?: (event: CustomEvent<ItemReorderEventDetail>) => void;
+  createItem: CreateItem;
   children: React.ReactNode;
 }
 
-const ReorderContext = createContext<boolean>(false);
+const ManageListContext = createContext<{
+  reorderMode: boolean;
+  itemType: string;
+}>({ reorderMode: false, itemType: 'item' });
 
 const ManageList: React.FC<ManageListProps> = ({
   itemType,
-  itemToEdit,
-  setItemToEdit,
   createItem,
-  renameItem,
-  deleteItem,
-  getPath,
+  useReorder = true,
   onReorder,
   children,
 }) => {
@@ -35,9 +35,9 @@ const ManageList: React.FC<ManageListProps> = ({
     <>
       <IonList lines="full">
         <IonReorderGroup disabled={!reorderMode} onIonItemReorder={onReorder}>
-          <ReorderContext.Provider value={reorderMode}>
+          <ManageListContext.Provider value={{ reorderMode, itemType }}>
             {children}
-          </ReorderContext.Provider>
+          </ManageListContext.Provider>
         </IonReorderGroup>
       </IonList>
 
@@ -45,20 +45,12 @@ const ManageList: React.FC<ManageListProps> = ({
         itemType={itemType}
         createItem={createItem}
         reorderMode={reorderMode}
+        useReorder={useReorder}
         setReorderMode={setReorderMode}
-      />
-
-      <ManageActionSheet
-        itemType={itemType}
-        itemToEdit={itemToEdit}
-        setItemToEdit={setItemToEdit}
-        renameItem={renameItem}
-        deleteItem={deleteItem}
-        getPath={getPath}
       />
     </>
   );
 };
 
 export default ManageList;
-export { ReorderContext };
+export { ManageListContext };

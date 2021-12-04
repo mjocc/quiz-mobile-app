@@ -3,7 +3,7 @@ import {
   IonFabButton,
   IonFabList,
   IonIcon,
-  useIonAlert
+  useIonAlert,
 } from '@ionic/react';
 import { add, close, create, reorderFour } from 'ionicons/icons';
 
@@ -11,6 +11,7 @@ interface ManageFabProps {
   itemType: string; // e.g. 'quiz' or 'question' etc.
   createItem: (params: { newItemText: string }) => void;
   reorderMode: boolean;
+  useReorder: boolean;
   setReorderMode: (value: boolean) => void;
 }
 
@@ -18,66 +19,80 @@ const ManageFab: React.FC<ManageFabProps> = ({
   itemType,
   createItem,
   reorderMode,
+  useReorder,
   setReorderMode,
 }) => {
   const [present] = useIonAlert();
 
   return (
     <IonFab vertical="bottom" horizontal="end" slot="fixed">
-      {reorderMode ? (
-        <IonFabButton
-          onClick={() => {
-            setReorderMode(false);
-          }}
-        >
-          <IonIcon icon={close} />
-        </IonFabButton>
-      ) : (
-        <>
-          <IonFabButton>
-            <IonIcon icon={create} />
+      {useReorder ? (
+        reorderMode ? (
+          <IonFabButton
+            onClick={() => {
+              setReorderMode(false);
+            }}
+          >
+            <IonIcon icon={close} />
           </IonFabButton>
-          <IonFabList side="top">
-            <IonFabButton
-              onClick={() => {
-                present({
-                  header: `Create ${itemType}`,
-                  inputs: [
-                    {
-                      name: 'newItemText',
-                      type: 'text',
-                      placeholder: `New ${itemType} text`,
-                    },
-                  ],
-                  buttons: [
-                    {
-                      text: 'Cancel',
-                      role: 'cancel',
-                    },
-                    {
-                      text: 'Create',
-                      handler: ({ newItemText }) => {
-                        createItem({ newItemText });
-                      },
-                    },
-                  ],
-                });
-              }}
-            >
-              <IonIcon icon={add} />
+        ) : (
+          <>
+            <IonFabButton>
+              <IonIcon icon={create} />
             </IonFabButton>
-            <IonFabButton
-              onClick={() => {
-                setReorderMode(true);
-              }}
-            >
-              <IonIcon icon={reorderFour} />
-            </IonFabButton>
-          </IonFabList>
-        </>
+            <IonFabList side="top">
+              <IonFabButton
+                onClick={() => showCreateAlert(present, itemType, createItem)}
+              >
+                <IonIcon icon={add} />
+              </IonFabButton>
+              <IonFabButton
+                onClick={() => {
+                  setReorderMode(true);
+                }}
+              >
+                <IonIcon icon={reorderFour} />
+              </IonFabButton>
+            </IonFabList>
+          </>
+        )
+      ) : (
+        <IonFabButton
+          onClick={() => showCreateAlert(present, itemType, createItem)}
+        >
+          <IonIcon icon={add} />
+        </IonFabButton>
       )}
     </IonFab>
   );
 };
+
+const showCreateAlert = (
+  present: Function,
+  itemType: string,
+  createItem: (params: { newItemText: string }) => void
+) =>
+  present({
+    header: `Create ${itemType}`,
+    inputs: [
+      {
+        name: 'newItemText',
+        type: 'text',
+        placeholder: `New ${itemType} text`,
+      },
+    ],
+    buttons: [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+      },
+      {
+        text: 'Create',
+        handler({ newItemText }: { newItemText: string }) {
+          createItem({ newItemText });
+        },
+      },
+    ],
+  });
 
 export default ManageFab;

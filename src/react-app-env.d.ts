@@ -22,7 +22,6 @@ interface Question {
 
 interface Quiz {
   id: string;
-  order: number;
   text: string;
   modified: number; // unix time
   questions: string[]; // array of 'foreign keys'

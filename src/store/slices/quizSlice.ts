@@ -1,7 +1,8 @@
-import { createSlice, PayloadAction, nanoid } from '@reduxjs/toolkit';
+import {
+  createSelector, createSlice, nanoid, PayloadAction
+} from '@reduxjs/toolkit';
 import _find from 'lodash-es/find';
 import _remove from 'lodash-es/remove';
-import _filter from 'lodash-es/filter';
 import { RootState } from '../store';
 
 interface QuizSliceState {
@@ -18,40 +19,17 @@ const initialState: QuizSliceState = {
 
 const updateModifiedQuiz = (
   state: QuizSliceState,
-  {
-    quiz,
-    question,
-    option,
-  }: {
-    quiz?: Quiz;
-    question?: Question;
-    option?: Option;
-  }
+  { id, quiz }: { id?: string; quiz?: Quiz }
 ) => {
-  const updateModified = (quiz: Quiz) => {
+  const updateModifiedQuiz = (quiz: Quiz) => {
     quiz.modified = new Date().getTime();
   };
-
   if (quiz) {
-    updateModified(quiz);
-  } else if (question) {
-    const quiz = _find(state.quizzes, (quiz) =>
-      quiz.questions.includes(question.id)
-    );
+    updateModifiedQuiz(quiz);
+  } else if (id) {
+    const quiz = _find(state.quizzes, { id });
     if (quiz) {
-      updateModified(quiz);
-    }
-  } else if (option) {
-    const question = _find(state.questions, (question) =>
-      question.options.includes(option.id)
-    );
-    if (question) {
-      const quiz = _find(state.quizzes, (quiz) =>
-        quiz.questions.includes(question.id)
-      );
-      if (quiz) {
-        updateModified(quiz);
-      }
+      updateModifiedQuiz(quiz);
     }
   }
 };
@@ -76,49 +54,123 @@ export const quizSlice = createSlice({
     removeQuiz(state, { payload: id }: PayloadAction<string>) {
       _remove(state.quizzes, { id });
     },
-    addQuestion(state, { payload: question }: PayloadAction<Question>) {
+    addQuestion(
+      state,
+      {
+        payload: { question, quizId },
+      }: PayloadAction<{ question: Question; quizId: string }>
+    ) {
       state.questions.push(question);
+      const quiz = _find(state.quizzes, { id: quizId });
+      if (quiz) {
+        quiz.questions.push(question.id);
+        updateModifiedQuiz(state, { quiz });
+      }
     },
     renameQuestion(
       state,
-      { payload: { id, text } }: PayloadAction<{ id: string; text: string }>
+      {
+        payload: { questionId, quizId, text },
+      }: PayloadAction<{ questionId: string; quizId: string; text: string }>
     ) {
-      const question = _find(state.questions, { id });
+      const question = _find(state.questions, { id: questionId });
       if (question) {
         question.text = text;
-        updateModifiedQuiz(state, { question });
+        updateModifiedQuiz(state, { id: quizId });
       }
     },
-    removeQuestion(state, { payload: id }: PayloadAction<string>) {
-      _remove(state.questions, { id });
-    },
-    addOption(state, { payload: option }: PayloadAction<Option>) {
-      state.options.push(option);
-    },
-    renameOption(
+    removeQuestion(
       state,
-      { payload: { id, text } }: PayloadAction<{ id: string; text: string }>
+      {
+        payload: { questionId, quizId },
+      }: PayloadAction<{ questionId: string; quizId: string }>
     ) {
-      const option = _find(state.options, { id });
-      if (option) {
-        option.text = text;
-        updateModifiedQuiz(state, { option });
+      const quiz = _find(state.quizzes, { id: quizId });
+      if (quiz) {
+        _remove(quiz.questions, (question: string) => {
+          return question === questionId;
+        });
+        updateModifiedQuiz(state, { quiz });
       }
+      _remove(state.questions, { id: questionId });
     },
-    removeOption(state, { payload: id }: PayloadAction<string>) {
-      _remove(state.options, { id });
-    },
+    // addOption(state, { payload: option }: PayloadAction<Option>) {
+    //   state.options.push(option);
+    // },
+    // renameOption(
+    //   state,
+    //   { payload: { id, text } }: PayloadAction<{ id: string; text: string }>
+    // ) {
+    //   const option = _find(state.options, { id });
+    //   if (option) {
+    //     option.text = text;
+    //     updateModifiedQuiz(state, { option });
+    //   }
+    // },
+    // removeOption(state, { payload: id }: PayloadAction<string>) {
+    //   _remove(state.options, { id });
+    // },
   },
 });
 
-const createQuizFromText = (text: string, quizzes: Quiz[]): Quiz => ({
+export const {
+  addQuiz,
+  renameQuiz,
+  removeQuiz,
+  addQuestion,
+  renameQuestion,
+  removeQuestion,
+  // addOption,
+  // renameOption,
+  // removeOption,
+} = quizSlice.actions;
+
+const selectQuizzes = (state: RootState) => state.quiz.quizzes;
+const makeSelectQuestions = () =>
+  createSelector(
+    (state: RootState) => state.quiz.questions,
+    (state: RootState, quizId: string) => {
+      const quiz = _find(state.quiz.quizzes, { id: quizId });
+      if (quiz) {
+        return quiz.questions;
+      } else {
+        return null;
+      }
+    },
+    (questions, questionIDs) => {
+      if (questions && questionIDs) {
+        try {
+          return questionIDs.map((questionId: string) => {
+            const question = _find(questions, { id: questionId });
+            if (question) {
+              return question;
+            } else {
+              throw `quiz not found`;
+            }
+          });
+        } catch (error) {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+  );
+const selectQuizName = (quizId: string) => (state: RootState) => {
+  const quiz = _find(state.quiz.quizzes, { id: quizId });
+  if (quiz) {
+    return quiz.text;
+  }
+};
+export { selectQuizzes, makeSelectQuestions, selectQuizName };
+export { createQuizFromText, createQuestionFromText };
+
+const createQuizFromText = (text: string): Quiz => ({
   id: nanoid(),
-  order: quizzes.length + 1,
   text,
   modified: new Date().getTime(),
   questions: [],
 });
-
 const createQuestionFromText = (
   text: string,
   questions: Question[]
@@ -128,49 +180,5 @@ const createQuestionFromText = (
   text,
   options: [],
 });
-
-export { createQuizFromText, createQuestionFromText };
-
-export const {
-  addQuiz,
-  renameQuiz,
-  removeQuiz,
-  addQuestion,
-  renameQuestion,
-  removeQuestion,
-  addOption,
-  renameOption,
-  removeOption,
-} = quizSlice.actions;
-
-export const selectQuizzes = (state: RootState) => state.quiz.quizzes;
-export const selectQuestions = (quizId: string) => (state: RootState) => {
-  console.log('selector reran');
-  const quiz = _find(state.quiz.quizzes, { id: quizId });
-  if (quiz) {
-    try {
-      return quiz.questions.map((questionId: string) => {
-        const question = _find(state.quiz.questions, { id: questionId });
-        if (question) {
-          return question;
-        } else {
-          console.error(`quiz ${quizId} doesn't exist`);
-          throw 'something went wrong';
-        }
-      });
-    } catch (error) {
-      return null;
-    }
-  } else {
-    console.error(`quiz ${quizId} doesn't exist`);
-    return null;
-  }
-};
-export const selectQuizName = (quizId: string) => (state: RootState) => {
-  const quiz = _find(state.quiz.quizzes, { id: quizId });
-  if (quiz) {
-    return quiz.text;
-  }
-};
 
 export default quizSlice.reducer;

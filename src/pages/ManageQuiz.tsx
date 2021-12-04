@@ -7,34 +7,31 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  useIonToast,
+  useIonToast
 } from '@ionic/react';
-import { useEffect, useState } from 'react';
-import { useHistory, useParams } from 'react-router';
-import ManageListItem from '../components/ManageListItem';
-import ManageList from '../components/ManageList';
-import { useReorder } from '../hooks/reorder';
 import _orderBy from 'lodash-es/orderBy';
+import { useMemo } from 'react';
+import { useHistory, useParams } from 'react-router';
+import ManageList from '../components/ManageList';
+import ManageListItem from '../components/ManageListItem';
+import { useReorder } from '../hooks/reorder';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   addQuestion,
-  createQuestionFromText,
-  removeQuestion,
-  renameQuestion,
-  selectQuestions,
-  selectQuizName,
+  createQuestionFromText, makeSelectQuestions, removeQuestion,
+  renameQuestion, selectQuizName
 } from '../store/slices/quizSlice';
 
 const ManageQuiz: React.FC = () => {
   const { quizId }: { quizId: string } = useParams();
   const quizName = useAppSelector(selectQuizName(quizId));
-  const questions = useAppSelector(selectQuestions(quizId));
+  const selectQuestions = useMemo(makeSelectQuestions, []);
+  const questions = useAppSelector((state) => selectQuestions(state, quizId));
   const dispatch = useAppDispatch();
 
   const history = useHistory();
   const [present, dismiss] = useIonToast();
   const { doReorder } = useReorder();
-  let [questionToEdit, setQuestionToEdit] = useState<Question>();
 
   if (questions !== null) {
     return (
@@ -42,7 +39,7 @@ const ManageQuiz: React.FC = () => {
         <IonHeader>
           <IonToolbar>
             <IonButtons slot="start">
-              <IonBackButton />
+              <IonBackButton defaultHref="/manage" />
             </IonButtons>
             <IonTitle>Manage quiz - '{quizName}'</IonTitle>
           </IonToolbar>
@@ -51,31 +48,37 @@ const ManageQuiz: React.FC = () => {
         <IonContent fullscreen>
           <ManageList
             itemType="question"
-            itemToEdit={questionToEdit}
-            setItemToEdit={setQuestionToEdit}
+            onReorder={doReorder}
             createItem={({ newItemText }) => {
               dispatch(
-                addQuestion(createQuestionFromText(newItemText, questions))
+                addQuestion({
+                  question: createQuestionFromText(newItemText, questions),
+                  quizId,
+                })
               );
             }}
-            renameItem={({ itemToEdit, newItemText }) => {
-              dispatch(
-                renameQuestion({ id: itemToEdit.id, text: newItemText })
-              );
-            }}
-            deleteItem={({ itemToEdit }) => {
-              dispatch(removeQuestion(itemToEdit.id));
-            }}
-            getPath={({ itemToEdit }) => `/manage/${itemToEdit.id}`}
-            onReorder={doReorder}
           >
-            {_orderBy(questions, ['order'], ['asc']).map((question) => (
+            {_orderBy(questions, ['modified'], ['asc']).map((question) => (
               <ManageListItem
                 key={question.id}
-                onButtonClick={() => setQuestionToEdit(question)}
                 onRowClick={() =>
                   history.push(`/manage/${quizId}/${question.id}`)
                 }
+                itemToEdit={question}
+                renameItem={({ itemToEdit, newItemText }) => {
+                  dispatch(
+                    renameQuestion({
+                      questionId: itemToEdit.id,
+                      quizId,
+                      text: newItemText,
+                    })
+                  );
+                }}
+                deleteItem={({ itemToEdit }) => {
+                  dispatch(
+                    removeQuestion({ questionId: itemToEdit.id, quizId })
+                  );
+                }}
               >
                 <IonLabel>{question.text}</IonLabel>
               </ManageListItem>
@@ -85,10 +88,11 @@ const ManageQuiz: React.FC = () => {
       </IonPage>
     );
   } else {
-    present({ message: 'Something went wrong' });
+    present({ message: "Selected quiz doesn't exist" });
     setTimeout(() => {
       dismiss();
     }, 3500);
+    history.push('/manage');
     return null;
   }
 };
