@@ -39,7 +39,7 @@ const ManageQuizzes: React.FC = () => {
             dispatch(addQuiz(createQuizFromText(newItemText)));
           }}
           >
-          {_orderBy(quizzes, ['order'], ['asc']).map((quiz) => (
+          {_orderBy(quizzes, ['modified'], ['desc']).map((quiz) => (
             <ManageListItem
             key={quiz.id}
             onRowClick={() => history.push(`/manage/${quiz.id}`)}

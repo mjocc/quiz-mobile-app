@@ -58,7 +58,7 @@ const ManageQuiz: React.FC = () => {
               );
             }}
           >
-            {_orderBy(questions, ['modified'], ['asc']).map((question) => (
+            {_orderBy(questions, ['order'], ['asc']).map((question) => (
               <ManageListItem
                 key={question.id}
                 onRowClick={() =>
