@@ -1,9 +1,10 @@
 import {
   IonContent,
-  IonHeader, IonLabel,
+  IonHeader,
+  IonLabel,
   IonPage,
   IonTitle,
-  IonToolbar
+  IonToolbar,
 } from '@ionic/react';
 import _orderBy from 'lodash-es/orderBy';
 import { useHistory } from 'react-router';
@@ -15,7 +16,7 @@ import {
   createQuizFromText,
   removeQuiz,
   renameQuiz,
-  selectQuizzes
+  selectQuizzes,
 } from '../store/slices/quizSlice';
 
 const ManageQuizzes: React.FC = () => {
@@ -38,18 +39,20 @@ const ManageQuizzes: React.FC = () => {
           createItem={({ newItemText }) => {
             dispatch(addQuiz(createQuizFromText(newItemText)));
           }}
-          >
+        >
           {_orderBy(quizzes, ['modified'], ['desc']).map((quiz) => (
             <ManageListItem
-            key={quiz.id}
-            onRowClick={() => history.push(`/manage/${quiz.id}`)}
-            itemToEdit={quiz}
-            renameItem={({ itemToEdit, newItemText }) => {
-              dispatch(renameQuiz({ id: itemToEdit.id, text: newItemText }));
-            }}
-            deleteItem={({ itemToEdit }) => {
-              dispatch(removeQuiz(itemToEdit.id));
-            }}
+              key={quiz.id}
+              onRowClick={() => history.push(`/manage/${quiz.id}`)}
+              itemToEdit={quiz}
+              renameItem={({ itemToEdit, newItemText }) => {
+                dispatch(
+                  renameQuiz({ quiz: itemToEdit as Quiz, text: newItemText })
+                );
+              }}
+              deleteItem={({ itemToEdit }) => {
+                dispatch(removeQuiz(itemToEdit as Quiz));
+              }}
             >
               <IonLabel>{quiz.text}</IonLabel>
               <IonLabel className="muted-text">

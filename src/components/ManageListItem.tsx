@@ -10,24 +10,30 @@ import {
   UseIonAlertResult,
 } from '@ionic/react';
 import { pencil, trash } from 'ionicons/icons';
-import { MouseEventHandler, useContext, useRef, MutableRefObject } from 'react';
+import {
+  MouseEventHandler,
+  useContext,
+  useRef,
+  MutableRefObject,
+  ReactElement,
+} from 'react';
 import { DeleteItem, ManageListContext, RenameItem } from './ManageList';
 
-interface ManageListItemProps {
+interface ManageListItemProps<T extends Item> {
   onRowClick: MouseEventHandler<HTMLIonRowElement>;
-  itemToEdit: Item;
-  renameItem: RenameItem;
-  deleteItem: DeleteItem;
+  itemToEdit: T;
+  renameItem: RenameItem<T>;
+  deleteItem: DeleteItem<T>;
   children: React.ReactNode;
 }
 
-const ManageListItem: React.FC<ManageListItemProps> = ({
+const ManageListItem = <T extends Item>({
   onRowClick,
   itemToEdit,
   renameItem,
   deleteItem,
   children,
-}) => {
+}: ManageListItemProps<T>): ReactElement | null => {
   const { reorderMode, itemType } = useContext(ManageListContext);
   const itemSlidingRef = useRef<HTMLIonItemSlidingElement | null>(null);
   const ionAlert = useIonAlert();
@@ -56,7 +62,12 @@ const ManageListItem: React.FC<ManageListItemProps> = ({
         <IonItemOption
           color="danger"
           onClick={() =>
-            showDeleteConfirmation(ionAlert, itemToEdit, deleteItem, itemSlidingRef)
+            showDeleteConfirmation(
+              ionAlert,
+              itemToEdit,
+              deleteItem,
+              itemSlidingRef
+            )
           }
         >
           <IonIcon icon={trash} className="icon-button-padding" />
@@ -79,11 +90,11 @@ const closeSlidingItem = (itemRef: SlidingItemRefType) => {
   }
 };
 
-const showRenameAlert = (
+const showRenameAlert = <T extends Item>(
   [present]: UseIonAlertResult,
   itemType: string,
-  itemToEdit: Item,
-  renameItem: RenameItem,
+  itemToEdit: T,
+  renameItem: RenameItem<T>,
   itemSlidingRef: SlidingItemRefType
 ) =>
   present({
@@ -114,10 +125,10 @@ const showRenameAlert = (
     ],
   });
 
-const showDeleteConfirmation = (
+const showDeleteConfirmation = <T extends Item>(
   [present]: UseIonAlertResult,
-  itemToEdit: Item,
-  deleteItem: DeleteItem,
+  itemToEdit: T,
+  deleteItem: DeleteItem<T>,
   itemSlidingRef: SlidingItemRefType
 ) =>
   present({

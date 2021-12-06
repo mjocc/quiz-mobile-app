@@ -1,5 +1,8 @@
 import {
-  createSelector, createSlice, nanoid, PayloadAction
+  createSelector,
+  createSlice,
+  nanoid,
+  PayloadAction,
 } from '@reduxjs/toolkit';
 import _find from 'lodash-es/find';
 import _remove from 'lodash-es/remove';
@@ -33,6 +36,16 @@ const updateModifiedQuiz = (
     }
   }
 };
+const getStateItem = <T extends Item>(
+  state: T[],
+  item: T,
+  cb: (stateItem: T) => void
+) => {
+  const stateItem = _find(state, (stateItem) => stateItem === item);
+  if (stateItem) {
+    cb(stateItem);
+  }
+};
 
 export const quizSlice = createSlice({
   name: 'quiz',
@@ -43,16 +56,15 @@ export const quizSlice = createSlice({
     },
     renameQuiz(
       state,
-      { payload: { id, text } }: PayloadAction<{ id: string; text: string }>
+      { payload: { quiz, text } }: PayloadAction<{ quiz: Quiz; text: string }>
     ) {
-      const quiz = _find(state.quizzes, { id });
-      if (quiz) {
-        quiz.text = text;
-        updateModifiedQuiz(state, { quiz });
-      }
+      getStateItem(state.quizzes, quiz, (stateQuiz) => {
+        stateQuiz.text = text;
+        updateModifiedQuiz(state, { quiz: stateQuiz });
+      });
     },
-    removeQuiz(state, { payload: id }: PayloadAction<string>) {
-      _remove(state.quizzes, { id });
+    removeQuiz(state, { payload: quiz }: PayloadAction<Quiz>) {
+      _remove(state.quizzes, (stateQuiz) => stateQuiz === quiz);
     },
     addQuestion(
       state,
@@ -94,36 +106,41 @@ export const quizSlice = createSlice({
       }
       _remove(state.questions, { id: questionId });
     },
-    // addOption(state, { payload: option }: PayloadAction<Option>) {
-    //   state.options.push(option);
-    // },
-    // renameOption(
-    //   state,
-    //   { payload: { id, text } }: PayloadAction<{ id: string; text: string }>
-    // ) {
-    //   const option = _find(state.options, { id });
-    //   if (option) {
-    //     option.text = text;
-    //     updateModifiedQuiz(state, { option });
-    //   }
-    // },
-    // removeOption(state, { payload: id }: PayloadAction<string>) {
-    //   _remove(state.options, { id });
-    // },
+    addOption(
+      state,
+      {
+        payload: { option, questionId, quizId },
+      }: PayloadAction<{ option: Option; questionId: string; quizId: string }>
+    ) {
+      state.options.push(option);
+      const question = _find(state.questions, { id: questionId });
+      if (question) {
+        question.options.push(option.id);
+        updateModifiedQuiz(state, { id: quizId });
+      }
+    },
+    renameOption(
+      state,
+      {
+        payload: { optionId, questionId, quizId, text },
+      }: PayloadAction<{
+        optionId: string;
+        questionId: string;
+        quizId: string;
+        text: string;
+      }>
+    ) {
+      // const option = _find(state.options, { id });
+      // if (option) {
+      //   option.text = text;
+      //   updateModifiedQuiz(state, { option });
+      // }
+    },
+    removeOption(state, { payload: id }: PayloadAction<string>) {
+      _remove(state.options, { id });
+    },
   },
 });
-
-export const {
-  addQuiz,
-  renameQuiz,
-  removeQuiz,
-  addQuestion,
-  renameQuestion,
-  removeQuestion,
-  // addOption,
-  // renameOption,
-  // removeOption,
-} = quizSlice.actions;
 
 const selectQuizzes = (state: RootState) => state.quiz.quizzes;
 const makeSelectQuestions = () =>
@@ -162,8 +179,6 @@ const selectQuizName = (quizId: string) => (state: RootState) => {
     return quiz.text;
   }
 };
-export { selectQuizzes, makeSelectQuestions, selectQuizName };
-export { createQuizFromText, createQuestionFromText };
 
 const createQuizFromText = (text: string): Quiz => ({
   id: nanoid(),
@@ -180,5 +195,28 @@ const createQuestionFromText = (
   text,
   options: [],
 });
+const createOptionFromText = (
+  text: string,
+  options: Option[],
+  correct: boolean = false
+): Option => ({
+  id: nanoid(),
+  order: options.length + 1,
+  text,
+  correct,
+});
 
+export const {
+  addQuiz,
+  renameQuiz,
+  removeQuiz,
+  addQuestion,
+  renameQuestion,
+  removeQuestion,
+  addOption,
+  renameOption,
+  removeOption,
+} = quizSlice.actions;
+export { selectQuizzes, makeSelectQuestions, selectQuizName };
+export { createQuizFromText, createQuestionFromText, createOptionFromText };
 export default quizSlice.reducer;

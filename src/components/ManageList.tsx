@@ -4,11 +4,11 @@ import { createContext, useState } from 'react';
 import ManageFab from './ManageFab';
 
 export type CreateItem = (params: { newItemText: string }) => void;
-export type RenameItem = (params: {
-  itemToEdit: Item;
+export type RenameItem<T extends Item> = (params: {
+  itemToEdit: T;
   newItemText: string;
 }) => void;
-export type DeleteItem = (params: { itemToEdit: Item }) => void;
+export type DeleteItem<T extends Item> = (params: { itemToEdit: T }) => void;
 interface ManageListProps {
   itemType: string; // e.g. 'quiz' or 'question' etc.
   useReorder?: boolean;
