@@ -21,29 +21,39 @@ const initialState: QuizSliceState = {
 };
 
 const updateModifiedQuiz = (
-  state: QuizSliceState,
-  { id, quiz }: { id?: string; quiz?: Quiz }
+  param: { state: QuizSliceState; id: string } | { quiz: Quiz }
 ) => {
   const updateModifiedQuiz = (quiz: Quiz) => {
     quiz.modified = new Date().getTime();
   };
-  if (quiz) {
-    updateModifiedQuiz(quiz);
-  } else if (id) {
-    const quiz = _find(state.quizzes, { id });
+  if ('quiz' in param) {
+    updateModifiedQuiz(param.quiz);
+  } else {
+    const quiz = _find(param.state.quizzes, { id: param.id });
     if (quiz) {
       updateModifiedQuiz(quiz);
     }
   }
 };
 const getStateItem = <T extends Item>(
-  state: T[],
-  item: T,
+  stateSection: T[],
+  itemOrId: T | string,
   cb: (stateItem: T) => void
 ) => {
-  const stateItem = _find(state, (stateItem) => stateItem === item);
-  if (stateItem) {
-    cb(stateItem);
+  let item: T | undefined;
+  if (typeof itemOrId === 'string') {
+    item = _find(stateSection, { id: itemOrId }) as T | undefined;
+  } else {
+    item = itemOrId;
+  }
+  if (item) {
+    const stateItem = _find(
+      stateSection,
+      (stateItem) => stateItem.id === item!.id
+    );
+    if (stateItem) {
+      cb(stateItem);
+    }
   }
 };
 
@@ -60,11 +70,11 @@ export const quizSlice = createSlice({
     ) {
       getStateItem(state.quizzes, quiz, (stateQuiz) => {
         stateQuiz.text = text;
-        updateModifiedQuiz(state, { quiz: stateQuiz });
+        updateModifiedQuiz({ quiz: stateQuiz });
       });
     },
     removeQuiz(state, { payload: quiz }: PayloadAction<Quiz>) {
-      _remove(state.quizzes, (stateQuiz) => stateQuiz === quiz);
+      _remove(state.quizzes, { id: quiz.id });
     },
     addQuestion(
       state,
@@ -72,39 +82,37 @@ export const quizSlice = createSlice({
         payload: { question, quizId },
       }: PayloadAction<{ question: Question; quizId: string }>
     ) {
-      state.questions.push(question);
-      const quiz = _find(state.quizzes, { id: quizId });
-      if (quiz) {
+      getStateItem(state.quizzes, quizId, (quiz) => {
+        state.questions.push(question);
         quiz.questions.push(question.id);
-        updateModifiedQuiz(state, { quiz });
-      }
+        updateModifiedQuiz({ quiz });
+      });
     },
     renameQuestion(
       state,
       {
-        payload: { questionId, quizId, text },
-      }: PayloadAction<{ questionId: string; quizId: string; text: string }>
+        payload: { question, quizId, text },
+      }: PayloadAction<{ question: Question; quizId: string; text: string }>
     ) {
-      const question = _find(state.questions, { id: questionId });
-      if (question) {
-        question.text = text;
-        updateModifiedQuiz(state, { id: quizId });
-      }
+      getStateItem(state.questions, question, (stateQuestion) => {
+        stateQuestion.text = text;
+        updateModifiedQuiz({ state, id: quizId });
+      });
     },
     removeQuestion(
       state,
       {
-        payload: { questionId, quizId },
-      }: PayloadAction<{ questionId: string; quizId: string }>
+        payload: { question, quizId },
+      }: PayloadAction<{ question: Question; quizId: string }>
     ) {
-      const quiz = _find(state.quizzes, { id: quizId });
-      if (quiz) {
-        _remove(quiz.questions, (question: string) => {
-          return question === questionId;
-        });
-        updateModifiedQuiz(state, { quiz });
-      }
-      _remove(state.questions, { id: questionId });
+      getStateItem(state.quizzes, quizId, (quiz) => {
+        _remove(
+          quiz.questions,
+          (innerQuestion: string) => innerQuestion === question.id
+        );
+        _remove(state.questions, { id: question.id });
+        updateModifiedQuiz({ quiz });
+      });
     },
     addOption(
       state,
@@ -112,32 +120,42 @@ export const quizSlice = createSlice({
         payload: { option, questionId, quizId },
       }: PayloadAction<{ option: Option; questionId: string; quizId: string }>
     ) {
-      state.options.push(option);
-      const question = _find(state.questions, { id: questionId });
-      if (question) {
+      getStateItem(state.questions, questionId, (question) => {
         question.options.push(option.id);
-        updateModifiedQuiz(state, { id: quizId });
-      }
+        state.options.push(option);
+        updateModifiedQuiz({ state, id: quizId });
+      });
     },
     renameOption(
       state,
       {
-        payload: { optionId, questionId, quizId, text },
+        payload: { option, quizId, text },
       }: PayloadAction<{
-        optionId: string;
+        option: Option;
         questionId: string;
         quizId: string;
         text: string;
       }>
     ) {
-      // const option = _find(state.options, { id });
-      // if (option) {
-      //   option.text = text;
-      //   updateModifiedQuiz(state, { option });
-      // }
+      getStateItem(state.options, option, (option) => {
+        option.text = text;
+        updateModifiedQuiz({ state, id: quizId });
+      });
     },
-    removeOption(state, { payload: id }: PayloadAction<string>) {
-      _remove(state.options, { id });
+    removeOption(
+      state,
+      {
+        payload: { option, questionId, quizId },
+      }: PayloadAction<{ option: Option; questionId: string; quizId: string }>
+    ) {
+      getStateItem(state.questions, questionId, (question) => {
+        _remove(
+          question.options,
+          (innerOption: string) => innerOption === option.id
+        );
+        _remove(state.options, { id: option.id });
+        updateModifiedQuiz({ state, id: quizId });
+      });
     },
   },
 });
@@ -147,23 +165,25 @@ const makeSelectQuestions = () =>
   createSelector(
     (state: RootState) => state.quiz.questions,
     (state: RootState, quizId: string) => {
-      const quiz = _find(state.quiz.quizzes, { id: quizId });
-      if (quiz) {
-        return quiz.questions;
-      } else {
-        return null;
-      }
+      let questions: string[] | undefined;
+      getStateItem(state.quiz.quizzes, quizId, (quiz) => {
+        questions = quiz.questions;
+      });
+      return questions;
     },
-    (questions, questionIDs) => {
-      if (questions && questionIDs) {
+    (questions, questionIds) => {
+      if (questions && questionIds) {
         try {
-          return questionIDs.map((questionId: string) => {
-            const question = _find(questions, { id: questionId });
-            if (question) {
-              return question;
-            } else {
-              throw `quiz not found`;
-            }
+          return questionIds.map((questionId: string) => {
+            let question: Question | undefined;
+            getStateItem(questions, questionId, (innerQuestion) => {
+              if (innerQuestion) {
+                question = innerQuestion;
+              } else {
+                throw 'quiz not found';
+              }
+            });
+            return question as Question;
           });
         } catch (error) {
           return null;
@@ -174,10 +194,11 @@ const makeSelectQuestions = () =>
     }
   );
 const selectQuizName = (quizId: string) => (state: RootState) => {
-  const quiz = _find(state.quiz.quizzes, { id: quizId });
-  if (quiz) {
-    return quiz.text;
-  }
+  let text: string | undefined;
+  getStateItem(state.quiz.quizzes, quizId, (quiz) => {
+    text = quiz.text;
+  });
+  return text;
 };
 
 const createQuizFromText = (text: string): Quiz => ({

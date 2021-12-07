@@ -1,11 +1,20 @@
 import {
+  IonButton,
+  IonButtons,
   IonContent,
   IonHeader,
+  IonIcon,
+  IonItem,
   IonLabel,
+  IonList,
+  IonListHeader,
   IonPage,
   IonTitle,
   IonToolbar,
+  isPlatform,
+  useIonPopover,
 } from '@ionic/react';
+import { ellipsisHorizontal, ellipsisVertical } from 'ionicons/icons';
 import _orderBy from 'lodash-es/orderBy';
 import { useHistory } from 'react-router';
 import ManageList from '../components/ManageList';
@@ -19,16 +28,42 @@ import {
   selectQuizzes,
 } from '../store/slices/quizSlice';
 
+const ExportPopover: React.FC = () => (
+  <IonList>
+    <IonListHeader>Manage saves</IonListHeader>
+    <IonItem button>Save quizzes</IonItem>
+    <IonItem button>Load quizzes</IonItem>
+  </IonList>
+);
+
 const ManageQuizzes: React.FC = () => {
   const quizzes = useAppSelector(selectQuizzes);
   const dispatch = useAppDispatch();
-
+  const [present, dismiss] = useIonPopover(ExportPopover);
   const history = useHistory();
+
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
           <IonTitle>Manage quizzes</IonTitle>
+          {isPlatform('hybrid') && (
+            <IonButtons slot="end">
+              <IonButton
+                onClick={(e) =>
+                  present({
+                    event: e.nativeEvent,
+                  })
+                }
+              >
+                <IonIcon
+                  slot="icon-only"
+                  ios={ellipsisHorizontal}
+                  md={ellipsisVertical}
+                />
+              </IonButton>
+            </IonButtons>
+          )}
         </IonToolbar>
       </IonHeader>
 
@@ -47,11 +82,11 @@ const ManageQuizzes: React.FC = () => {
               itemToEdit={quiz}
               renameItem={({ itemToEdit, newItemText }) => {
                 dispatch(
-                  renameQuiz({ quiz: itemToEdit as Quiz, text: newItemText })
+                  renameQuiz({ quiz: itemToEdit, text: newItemText })
                 );
               }}
               deleteItem={({ itemToEdit }) => {
-                dispatch(removeQuiz(itemToEdit as Quiz));
+                dispatch(removeQuiz(itemToEdit));
               }}
             >
               <IonLabel>{quiz.text}</IonLabel>

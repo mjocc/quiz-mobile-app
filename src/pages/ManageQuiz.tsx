@@ -68,7 +68,7 @@ const ManageQuiz: React.FC = () => {
                 renameItem={({ itemToEdit, newItemText }) => {
                   dispatch(
                     renameQuestion({
-                      questionId: itemToEdit.id,
+                      question: itemToEdit,
                       quizId,
                       text: newItemText,
                     })
@@ -76,7 +76,7 @@ const ManageQuiz: React.FC = () => {
                 }}
                 deleteItem={({ itemToEdit }) => {
                   dispatch(
-                    removeQuestion({ questionId: itemToEdit.id, quizId })
+                    removeQuestion({ question: itemToEdit, quizId })
                   );
                 }}
               >
