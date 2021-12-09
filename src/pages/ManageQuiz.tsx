@@ -16,11 +16,16 @@ import ManageList from '../components/ManageList';
 import ManageListItem from '../components/ManageListItem';
 import { useReorder } from '../hooks/reorder';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { createQuestionFromText } from '../store/slices/quizSlice/helpers';
+import {
+  makeSelectQuestions,
+  selectQuizName
+} from '../store/slices/quizSlice/selectors';
 import {
   addQuestion,
-  createQuestionFromText, makeSelectQuestions, removeQuestion,
-  renameQuestion, selectQuizName
-} from '../store/slices/quizSlice';
+  removeQuestion,
+  renameQuestion
+} from '../store/slices/quizSlice/slice';
 
 const ManageQuiz: React.FC = () => {
   const { quizId }: { quizId: string } = useParams();
@@ -75,9 +80,7 @@ const ManageQuiz: React.FC = () => {
                   );
                 }}
                 deleteItem={({ itemToEdit }) => {
-                  dispatch(
-                    removeQuestion({ question: itemToEdit, quizId })
-                  );
+                  dispatch(removeQuestion({ question: itemToEdit, quizId }));
                 }}
               >
                 <IonLabel>{question.text}</IonLabel>

@@ -10,7 +10,7 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist';
-import quizReducer from './slices/quizSlice';
+import quizReducer from './slices/quizSlice/slice';
 import * as localForage from 'localforage';
 
 const persistConfig = {

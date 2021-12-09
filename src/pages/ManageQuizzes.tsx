@@ -22,11 +22,11 @@ import ManageListItem from '../components/ManageListItem';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   addQuiz,
-  createQuizFromText,
   removeQuiz,
   renameQuiz,
-  selectQuizzes,
-} from '../store/slices/quizSlice';
+} from '../store/slices/quizSlice/slice';
+import { createQuizFromText } from '../store/slices/quizSlice/helpers';
+import { selectQuizzes } from '../store/slices/quizSlice/selectors';
 
 const ExportPopover: React.FC = () => (
   <IonList>
@@ -81,9 +81,7 @@ const ManageQuizzes: React.FC = () => {
               onRowClick={() => history.push(`/manage/${quiz.id}`)}
               itemToEdit={quiz}
               renameItem={({ itemToEdit, newItemText }) => {
-                dispatch(
-                  renameQuiz({ quiz: itemToEdit, text: newItemText })
-                );
+                dispatch(renameQuiz({ quiz: itemToEdit, text: newItemText }));
               }}
               deleteItem={({ itemToEdit }) => {
                 dispatch(removeQuiz(itemToEdit));
