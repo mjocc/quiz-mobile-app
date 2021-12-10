@@ -1,6 +1,6 @@
 import { nanoid } from '@reduxjs/toolkit';
 import _find from 'lodash-es/find';
-import { QuizSliceState } from './slice';
+import { Item, Option, Question, Quiz, QuizSliceState } from './slice';
 
 const getStateItem = <T extends Item>(
   stateSection: T[],

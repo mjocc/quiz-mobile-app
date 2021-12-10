@@ -1,6 +1,26 @@
 import { createSlice } from '@reduxjs/toolkit';
 import reducers from './reducers';
 
+export interface Quiz {
+  id: string;
+  text: string;
+  modified: number; // unix time
+  questions: string[]; // array of 'foreign keys'
+}
+export interface Question {
+  id: string;
+  order: number;
+  text: string;
+  options: string[]; // array of 'foreign keys'
+}
+export interface Option {
+  id: string;
+  order: number;
+  text: string;
+  correct: boolean;
+}
+export type Item = Quiz | Question | Option;
+
 export interface QuizSliceState {
   quizzes: Quiz[];
   questions: Question[];

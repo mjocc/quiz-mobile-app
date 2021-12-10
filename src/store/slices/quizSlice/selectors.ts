@@ -1,7 +1,6 @@
-import {
-  createSelector
-} from '@reduxjs/toolkit';
+import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
+import { Question } from './slice';
 import { getStateItem } from './helpers';
 
 const selectQuizzes = (state: RootState) => state.quiz.quizzes;

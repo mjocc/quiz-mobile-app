@@ -1,11 +1,11 @@
 import {
   PayloadAction,
   SliceCaseReducers,
-  ValidateSliceCaseReducers
+  ValidateSliceCaseReducers,
 } from '@reduxjs/toolkit';
 import _remove from 'lodash-es/remove';
 import { getStateItem, updateModifiedQuiz } from './helpers';
-import { QuizSliceState } from './slice';
+import { Option, Question, Quiz, QuizSliceState } from './slice';
 
 const reducers: ValidateSliceCaseReducers<
   QuizSliceState,
