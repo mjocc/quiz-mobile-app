@@ -24,7 +24,16 @@ const reducers: ValidateSliceCaseReducers<
     });
   },
   removeQuiz(state, { payload: quiz }: PayloadAction<Quiz>) {
+    let questionIds: string[] = quiz.questions;
+    let optionIds: string[] = [];
+    for (const questionId of questionIds) {
+      getStateItem(state.questions, questionId, (question) => {
+        optionIds = optionIds.concat(question.options);
+      });
+    }
     _remove(state.quizzes, { id: quiz.id });
+    _remove(state.questions, (question) => questionIds.includes(question.id));
+    _remove(state.options, (option) => optionIds.includes(option.id));
   },
   addQuestion(
     state,
@@ -55,12 +64,14 @@ const reducers: ValidateSliceCaseReducers<
       payload: { question, quizId },
     }: PayloadAction<{ question: Question; quizId: string }>
   ) {
+    const optionIds = question.options;
     getStateItem(state.quizzes, quizId, (quiz) => {
       _remove(
         quiz.questions,
         (innerQuestion: string) => innerQuestion === question.id
       );
       _remove(state.questions, { id: question.id });
+      _remove(state.options, (option) => optionIds.includes(option.id));
       updateModifiedQuiz({ quiz });
     });
   },
@@ -104,6 +115,25 @@ const reducers: ValidateSliceCaseReducers<
         (innerOption: string) => innerOption === option.id
       );
       _remove(state.options, { id: option.id });
+      updateModifiedQuiz({ state, id: quizId });
+    });
+  },
+  setCorrectOption(
+    state,
+    {
+      payload: { optionId, questionId, quizId },
+    }: PayloadAction<{ optionId: string; questionId: string; quizId: string }>
+  ) {
+    getStateItem(state.questions, questionId, (question) => {
+      for (const innerOptionId of question.options) {
+        getStateItem(state.options, innerOptionId, (option) => {
+          if (option.id === optionId) {
+            option.correct = true;
+          } else {
+            option.correct = false;
+          }
+        });
+      }
       updateModifiedQuiz({ state, id: quizId });
     });
   },

@@ -17,10 +17,11 @@ import {
   MutableRefObject,
   ReactElement,
 } from 'react';
+import { Item } from '../store/slices/quizSlice/slice';
 import { DeleteItem, ManageListContext, RenameItem } from './ManageList';
 
 interface ManageListItemProps<T extends Item> {
-  onRowClick: MouseEventHandler<HTMLIonRowElement>;
+  onRowClick?: MouseEventHandler<HTMLIonRowElement>;
   itemToEdit: T;
   renameItem: RenameItem<T>;
   deleteItem: DeleteItem<T>;
@@ -40,10 +41,8 @@ const ManageListItem = <T extends Item>({
 
   const component = (
     <IonItemSliding disabled={reorderMode} ref={itemSlidingRef}>
-      <IonItem button={!reorderMode}>
-        <IonRow className="list-item" onClick={onRowClick}>
-          {children}
-        </IonRow>
+      <IonItem button={!reorderMode} onClick={onRowClick}>
+        <div className="list-item">{children}</div>
       </IonItem>
       <IonItemOptions side="end">
         <IonItemOption

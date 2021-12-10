@@ -9,6 +9,7 @@ import {
   IonList,
   IonListHeader,
   IonPage,
+  IonRow,
   IonTitle,
   IonToolbar,
   isPlatform,
@@ -88,7 +89,10 @@ const ManageQuizzes: React.FC = () => {
               }}
             >
               <IonLabel>{quiz.text}</IonLabel>
-              <IonLabel className="muted-text">
+              <IonLabel
+                style={{ flexShrink: 0, textAlign: 'right' }}
+                className="muted-text"
+              >
                 {new Date(quiz.modified).toLocaleDateString('en-UK')}
               </IonLabel>
             </ManageListItem>

@@ -13,7 +13,7 @@ import { create, play } from 'ionicons/icons';
 import Play from './pages/Play';
 import ManageQuizzes from './pages/ManageQuizzes';
 import ManageQuiz from './pages/ManageQuiz';
-// import ManageQuestion from './pages/ManageQuestion';
+import ManageQuestion from './pages/ManageQuestion';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -45,11 +45,11 @@ const App: React.FC = () => (
           <Route exact path="/play" component={Play} />
           <Route exact path="/manage" component={ManageQuizzes} />
           <Route exact path="/manage/:quizId" component={ManageQuiz} />
-          {/* <Route
+          <Route
             exact
             path="/manage/:quizId/:questionId"
             component={ManageQuestion}
-          /> */}
+          />
           <Route exact path="/">
             <Redirect to="/play" />
           </Route>

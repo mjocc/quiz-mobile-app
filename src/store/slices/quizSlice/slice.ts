@@ -49,5 +49,6 @@ export const {
   addOption,
   renameOption,
   removeOption,
+  setCorrectOption,
 } = quizSlice.actions;
 export default quizSlice.reducer;
