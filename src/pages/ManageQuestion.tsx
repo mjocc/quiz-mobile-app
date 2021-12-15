@@ -15,24 +15,27 @@ import { useMemo } from 'react';
 import { useHistory, useParams } from 'react-router';
 import ManageList from '../components/ManageList';
 import ManageListItem from '../components/ManageListItem';
-import { useReorder } from '../hooks/reorder';
+import { useReorder } from '../lib/reorder';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { createOptionFromText } from '../store/slices/quizSlice/helpers';
 import {
   makeSelectOptions,
   selectCorrectQuestion,
   selectQuestionName,
+  selectQuizIds,
 } from '../store/slices/quizSlice/selectors';
 import {
   addOption,
   removeOption,
   renameOption,
+  reorderItems,
   setCorrectOption,
 } from '../store/slices/quizSlice/slice';
 
 const ManageQuestion: React.FC = () => {
   const { quizId, questionId }: { quizId: string; questionId: string } =
     useParams();
+  const quizIds = useAppSelector(selectQuizIds);
   const questionName = useAppSelector(selectQuestionName(questionId));
   const correctOptionId = useAppSelector(selectCorrectQuestion(questionId));
   const selectOptions = useMemo(makeSelectOptions, []);
@@ -41,15 +44,23 @@ const ManageQuestion: React.FC = () => {
 
   const history = useHistory();
   const [present, dismiss] = useIonToast();
-  const { doReorder } = useReorder();
+  const {
+    doReorder,
+    reorderMode,
+    setReorderMode,
+    itemOrders,
+    setItemOrders,
+    activateReorder,
+    deactivateReorder,
+  } = useReorder();
 
-  if (options !== null) {
+  if (options !== null && quizIds.includes(quizId)) {
     return (
       <IonPage>
         <IonHeader>
           <IonToolbar>
             <IonButtons slot="start">
-              <IonBackButton defaultHref="/manage" />
+              <IonBackButton defaultHref={`/manage/${quizId}`} />
             </IonButtons>
             <IonTitle>Manage question - '{questionName}'</IonTitle>
           </IonToolbar>
@@ -58,11 +69,6 @@ const ManageQuestion: React.FC = () => {
         <IonContent fullscreen>
           <ManageList
             itemType="option"
-            onReorder={doReorder}
-            radioValue={correctOptionId}
-            setRadioValue={(optionId) => {
-              dispatch(setCorrectOption({ optionId, questionId, quizId }));
-            }}
             createItem={({ newItemText }) => {
               dispatch(
                 addOption({
@@ -76,8 +82,41 @@ const ManageQuestion: React.FC = () => {
                 })
               );
             }}
+            reorderMode={reorderMode}
+            setReorderMode={setReorderMode}
+            onReorder={(event) => doReorder(event, itemOrders!, setItemOrders)}
+            activateReorder={() =>
+              activateReorder(
+                _orderBy(options, ['order'], ['asc']).map(
+                  (option) => option.id
+                ),
+                setItemOrders
+              )
+            }
+            deactivateReorder={() =>
+              deactivateReorder(
+                itemOrders!,
+                setItemOrders,
+                (orderTransformations) => {
+                  dispatch(
+                    reorderItems({ orderTransformations, itemType: 'options' })
+                  );
+                }
+              )
+            }
+            radioValue={correctOptionId}
+            setRadioValue={(optionId) => {
+              dispatch(setCorrectOption({ optionId, questionId, quizId }));
+            }}
           >
-            {_orderBy(options, ['order'], ['asc']).map((option) => (
+            {_orderBy(
+              options,
+              [
+                (option) =>
+                  reorderMode ? itemOrders!.indexOf(option.id) : option.order,
+              ],
+              ['asc']
+            ).map((option) => (
               <ManageListItem
                 key={option.id}
                 itemToEdit={option}
@@ -97,7 +136,7 @@ const ManageQuestion: React.FC = () => {
                 }}
               >
                 <IonLabel>{option.text}</IonLabel>
-                <IonRadio slot="end" value={option.id} />
+                {!reorderMode && <IonRadio slot="end" value={option.id} />}
               </ManageListItem>
             ))}
           </ManageList>

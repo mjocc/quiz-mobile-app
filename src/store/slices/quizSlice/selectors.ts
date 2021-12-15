@@ -100,6 +100,8 @@ const selectCorrectQuestion = (questionId: string) => (state: RootState) => {
     return null;
   }
 };
+const selectQuizIds = (state: RootState) =>
+  state.quiz.quizzes.map((quiz) => quiz.id);
 
 export {
   selectQuizzes,
@@ -108,4 +110,5 @@ export {
   makeSelectOptions,
   selectQuestionName,
   selectCorrectQuestion,
+  selectQuizIds,
 };

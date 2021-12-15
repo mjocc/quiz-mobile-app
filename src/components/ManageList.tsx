@@ -13,8 +13,11 @@ export type DeleteItem<T extends Item> = (params: { itemToEdit: T }) => void;
 interface ManageListProps {
   itemType: string; // e.g. 'quiz' or 'question' etc.
   createItem: CreateItem;
-  useReorder?: boolean;
+  reorderMode?: boolean;
+  setReorderMode?: (reorderMode: boolean) => void;
   onReorder?: (event: CustomEvent<ItemReorderEventDetail>) => void;
+  activateReorder?: () => void;
+  deactivateReorder?: () => void;
   radioValue?: string | null;
   setRadioValue?: (optionId: string) => void;
   children: React.ReactNode;
@@ -28,16 +31,18 @@ const ManageListContext = createContext<{
 const ManageList: React.FC<ManageListProps> = ({
   itemType,
   createItem,
-  useReorder = true,
+  reorderMode,
+  setReorderMode,
   onReorder,
+  activateReorder,
+  deactivateReorder,
   radioValue,
   setRadioValue,
   children,
 }) => {
-  let [reorderMode, setReorderMode] = useState<boolean>(false);
 
   const listChildren =
-    radioValue !== undefined && setRadioValue ? (
+    radioValue !== undefined && setRadioValue && !reorderMode ? (
       <IonRadioGroup
         value={radioValue}
         onIonChange={(e) => setRadioValue(e.detail.value)}
@@ -52,7 +57,12 @@ const ManageList: React.FC<ManageListProps> = ({
     <>
       <IonList lines="full">
         <IonReorderGroup disabled={!reorderMode} onIonItemReorder={onReorder}>
-          <ManageListContext.Provider value={{ reorderMode, itemType }}>
+          <ManageListContext.Provider
+            value={{
+              reorderMode: reorderMode !== undefined ? reorderMode : false,
+              itemType,
+            }}
+          >
             {listChildren}
           </ManageListContext.Provider>
         </IonReorderGroup>
@@ -62,8 +72,9 @@ const ManageList: React.FC<ManageListProps> = ({
         itemType={itemType}
         createItem={createItem}
         reorderMode={reorderMode}
-        useReorder={useReorder}
         setReorderMode={setReorderMode}
+        activateReorder={activateReorder}
+        deactivateReorder={deactivateReorder}
       />
     </>
   );

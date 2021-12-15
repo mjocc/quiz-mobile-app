@@ -71,7 +71,6 @@ const ManageQuizzes: React.FC = () => {
       <IonContent fullscreen>
         <ManageList
           itemType="quiz"
-          useReorder={false}
           createItem={({ newItemText }) => {
             dispatch(addQuiz(createQuizFromText(newItemText)));
           }}

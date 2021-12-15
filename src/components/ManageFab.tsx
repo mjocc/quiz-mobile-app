@@ -10,27 +10,30 @@ import { add, close, create, reorderFour } from 'ionicons/icons';
 interface ManageFabProps {
   itemType: string; // e.g. 'quiz' or 'question' etc.
   createItem: (params: { newItemText: string }) => void;
-  reorderMode: boolean;
-  useReorder: boolean;
-  setReorderMode: (value: boolean) => void;
+  reorderMode?: boolean;
+  setReorderMode?: (value: boolean) => void;
+  activateReorder?: () => void;
+  deactivateReorder?: () => void;
 }
 
 const ManageFab: React.FC<ManageFabProps> = ({
   itemType,
   createItem,
   reorderMode,
-  useReorder,
   setReorderMode,
+  activateReorder,
+  deactivateReorder,
 }) => {
   const [present] = useIonAlert();
 
   return (
     <IonFab vertical="bottom" horizontal="end" slot="fixed">
-      {useReorder ? (
+      {reorderMode !== undefined && setReorderMode && activateReorder && deactivateReorder ? (
         reorderMode ? (
           <IonFabButton
             onClick={() => {
               setReorderMode(false);
+              deactivateReorder();
             }}
           >
             <IonIcon icon={close} />
@@ -49,6 +52,7 @@ const ManageFab: React.FC<ManageFabProps> = ({
               <IonFabButton
                 onClick={() => {
                   setReorderMode(true);
+                  activateReorder();
                 }}
               >
                 <IonIcon icon={reorderFour} />

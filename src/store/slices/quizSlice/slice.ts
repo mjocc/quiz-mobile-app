@@ -50,5 +50,6 @@ export const {
   renameOption,
   removeOption,
   setCorrectOption,
+  reorderItems
 } = quizSlice.actions;
 export default quizSlice.reducer;

@@ -7,24 +7,25 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  useIonToast
+  useIonToast,
 } from '@ionic/react';
 import _orderBy from 'lodash-es/orderBy';
 import { useMemo } from 'react';
 import { useHistory, useParams } from 'react-router';
 import ManageList from '../components/ManageList';
 import ManageListItem from '../components/ManageListItem';
-import { useReorder } from '../hooks/reorder';
+import { useReorder } from '../lib/reorder';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { createQuestionFromText } from '../store/slices/quizSlice/helpers';
 import {
   makeSelectQuestions,
-  selectQuizName
+  selectQuizName,
 } from '../store/slices/quizSlice/selectors';
 import {
   addQuestion,
   removeQuestion,
-  renameQuestion
+  renameQuestion,
+  reorderItems,
 } from '../store/slices/quizSlice/slice';
 
 const ManageQuiz: React.FC = () => {
@@ -36,7 +37,15 @@ const ManageQuiz: React.FC = () => {
 
   const history = useHistory();
   const [present, dismiss] = useIonToast();
-  const { doReorder } = useReorder();
+  const {
+    doReorder,
+    reorderMode,
+    setReorderMode,
+    itemOrders,
+    setItemOrders,
+    activateReorder,
+    deactivateReorder,
+  } = useReorder();
 
   if (questions !== null) {
     return (
@@ -53,7 +62,6 @@ const ManageQuiz: React.FC = () => {
         <IonContent fullscreen>
           <ManageList
             itemType="question"
-            onReorder={doReorder}
             createItem={({ newItemText }) => {
               dispatch(
                 addQuestion({
@@ -62,8 +70,42 @@ const ManageQuiz: React.FC = () => {
                 })
               );
             }}
+            reorderMode={reorderMode}
+            setReorderMode={setReorderMode}
+            onReorder={(event) => doReorder(event, itemOrders!, setItemOrders)}
+            activateReorder={() =>
+              activateReorder(
+                _orderBy(questions, ['order'], ['asc']).map(
+                  (question) => question.id
+                ),
+                setItemOrders
+              )
+            }
+            deactivateReorder={() =>
+              deactivateReorder(
+                itemOrders!,
+                setItemOrders,
+                (orderTransformations) => {
+                  dispatch(
+                    reorderItems({
+                      orderTransformations,
+                      itemType: 'questions',
+                    })
+                  );
+                }
+              )
+            }
           >
-            {_orderBy(questions, ['order'], ['asc']).map((question) => (
+            {_orderBy(
+              questions,
+              [
+                (question) =>
+                  reorderMode
+                    ? itemOrders!.indexOf(question.id)
+                    : question.order,
+              ],
+              ['asc']
+            ).map((question) => (
               <ManageListItem
                 key={question.id}
                 onRowClick={() =>

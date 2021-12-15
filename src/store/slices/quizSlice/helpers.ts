@@ -19,7 +19,7 @@ const getStateItem = <T extends Item>(
       (stateItem) => stateItem.id === item!.id
     );
     if (stateItem) {
-      cb(stateItem);
+      return cb(stateItem);
     }
   }
 };

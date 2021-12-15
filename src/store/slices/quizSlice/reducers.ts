@@ -3,7 +3,10 @@ import {
   SliceCaseReducers,
   ValidateSliceCaseReducers,
 } from '@reduxjs/toolkit';
+import { WritableDraft } from '@reduxjs/toolkit/node_modules/immer/dist/internal';
+import _find from 'lodash-es/find';
 import _remove from 'lodash-es/remove';
+import { OrderTransformations } from '../../../lib/reorder';
 import { getStateItem, updateModifiedQuiz } from './helpers';
 import { Option, Question, Quiz, QuizSliceState } from './slice';
 
@@ -136,6 +139,26 @@ const reducers: ValidateSliceCaseReducers<
       }
       updateModifiedQuiz({ state, id: quizId });
     });
+  },
+  reorderItems(
+    state,
+    {
+      payload: { orderTransformations, itemType },
+    }: PayloadAction<{
+      orderTransformations: OrderTransformations;
+      itemType: 'questions' | 'options';
+    }>
+  ) {
+    const itemState = state[itemType];
+    for (const { itemId, order } of orderTransformations) {
+      let item = _find(itemState, { id: itemId }) as
+        | WritableDraft<Question>
+        | WritableDraft<Option>
+        | undefined;
+      if (item) {
+        item.order = order;
+      }
+    }
   },
 };
 
