@@ -5,7 +5,7 @@ import {
   IonIcon,
   useIonAlert,
 } from '@ionic/react';
-import { add, close, create, reorderFour } from 'ionicons/icons';
+import { add, close, create, reorderFour, save } from 'ionicons/icons';
 
 interface ManageFabProps {
   itemType: string; // e.g. 'quiz' or 'question' etc.
@@ -36,7 +36,7 @@ const ManageFab: React.FC<ManageFabProps> = ({
               deactivateReorder();
             }}
           >
-            <IonIcon icon={close} />
+            <IonIcon icon={save} />
           </IonFabButton>
         ) : (
           <>
